@@ -4,7 +4,7 @@ module.exports = (req, res, next) => {
     let authorizationHeader = req.headers.authorization;
     let token = authorizationHeader ? authorizationHeader.split(' ')[1] : null;
     if (token == null) {
-        return res.json({ auth: false });
+        return res.status(403).json({ auth: false, msg:'Authorization failed' });
     }
     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, data) => {
         if (err) {
@@ -12,8 +12,8 @@ module.exports = (req, res, next) => {
                 name: 'JsonWebTokenError',
                 message: 'jwt signature is required or expired',
             }
-            console.log("err", err)
-            return res.json({ auth: false });
+            console.log(err);
+            return res.status(401).json({ auth: false, msg:'Token is required or expired' });
         }
         req.auth = true;
         req.dataUser = data;

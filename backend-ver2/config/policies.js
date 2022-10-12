@@ -23,9 +23,8 @@ module.exports.policies = {
   //   // 'listStudents': 'auth',
   //   '*': 'auth',
   // },
-  TaskController: {
+  TasksController: {
     '*': 'auth',
   },  
-
 
 };

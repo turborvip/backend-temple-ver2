@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 // const moment = require('moment');
 
-var refreshTokens = {} ; // tao mot object refreshTokens
+var refreshTokens = [] ; // tao mot object refreshTokens
 
 const postLogin = async (req, res) => {
     try {
@@ -12,10 +12,10 @@ const postLogin = async (req, res) => {
         let user = await Users.findOne({ username: username });
         if (user) {
             if (await bcrypt.compare(password, user.password)) {
-                const accessToken = jwt.sign({ data:user }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '60' });
-                const refreshToken = jwt.sign({ data:user }, process.env.SECRET_REFRESH, { expiresIn: '120'})
+                const accessToken = jwt.sign({ data:user }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '10s' });
+                const refreshToken = jwt.sign({ data:user }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '1d'})
 
-                refreshTokens[refreshToken] = {user, accessToken, refreshToken,msg: 'Login was success'}
+                refreshTokens.push(refreshToken);
 
                 return res.status(200).json({user, accessToken, refreshToken,msg: 'Login was success'});
             } else {
@@ -30,15 +30,18 @@ const postLogin = async (req, res) => {
     }
 };
 
-const getNewToken = (req,res) => {
-    const {refreshToken,user} = req.body
-    // if refresh token exists
-    if(refreshToken && (refreshToken in refreshTokens)) {
-        const accessToken = jwt.sign({ data:user }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '60' });
-        // update the token in the list
-        refreshTokens[refreshToken].token = accessToken
 
-        res.status(200).json({accessToken, msg:'create new token'});        
+const getNewToken = (req,res) => {
+    const {refreshToken} = req.body
+    // if refresh token exists
+    if(refreshToken && (refreshTokens.includes(refreshToken))) {
+        jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, data) => {
+            if (err) {
+                return res.status(403).json({ auth: false, msg:'Authorization failed - Refresh token expired' });
+            }
+            const accessToken = jwt.sign({ data:data.data }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '10s' });
+            res.status(200).json({accessToken, msg:'Create new token'});        
+        });
     } else {
         res.status(404).json({msg:'Invalid request'});        
     }
