@@ -13,7 +13,7 @@ module.exports = (req, res, next) => {
                 message: 'jwt signature is required or expired',
             }
             console.log(err);
-            return res.status(401).json({ auth: false, msg:'Token is required or expired' });
+            return res.json({status:401, auth: false, msg:'Token is required or expired' });
         }
         req.auth = true;
         req.dataUser = data;

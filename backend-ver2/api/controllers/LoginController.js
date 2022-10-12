@@ -37,13 +37,13 @@ const getNewToken = (req,res) => {
     if(refreshToken && (refreshTokens.includes(refreshToken))) {
         jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, data) => {
             if (err) {
-                return res.status(403).json({ auth: false, msg:'Authorization failed - Refresh token expired' });
+                return res.status(403).json({ refreshToken: false, msg:'Authorization failed - Refresh token expired' });
             }
             const accessToken = jwt.sign({ data:data.data }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '10s' });
             res.status(200).json({accessToken, msg:'Create new token'});        
         });
     } else {
-        res.status(404).json({msg:'Invalid request'});        
+        res.status(404).json({refreshToken:false, msg:'Refresh Token not found'});        
     }
 }
 
